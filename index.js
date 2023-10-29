@@ -1,5 +1,5 @@
 const TelegramApi = require("node-telegram-bot-api");
-const TG_TOKEN = require("./settings");
+const { TG_TOKEN, PAY_TOKEN } = require("./settings");
 const token = TG_TOKEN;
 const bot = new TelegramApi(token, { polling: true });
 const { gameOptions, againOptions } = require("./options");
@@ -21,6 +21,7 @@ const start = () => {
     { command: "/start", description: "Начальное приветствие" },
     { command: "/info", description: "Сведения о твоем имени в тг" },
     { command: "/game", description: "Угадай число" },
+    { command: "/pay", description: "Купить товар" },
   ]);
 
   bot.on("message", async (msg) => {
@@ -40,7 +41,29 @@ const start = () => {
       );
     }
     if (text === "/game") {
-      startGame(chatId);
+      await startGame(chatId);
+    }
+    if (text === "/pay") {
+      return bot.sendInvoice(
+        chatId,
+        "Товар",
+        "описание товара",
+        "payload",
+        PAY_TOKEN,
+        "RUB",
+        [
+          {
+            label: "товар",
+            amount: 8000,
+          },
+        ],
+        {
+          photo_url:
+            "https://raskraskirus.ru/wp-content/uploads/7/2/f/72fc60554b098002430ef9cbd5c8ac35.png",
+          need_name: true,
+          is_flexible: true,
+        },
+      );
     }
     return bot.sendMessage(chatId, "Я такую команду не знаю;(");
   });
@@ -49,6 +72,7 @@ const start = () => {
 bot.on("callback_query", async (msg) => {
   const data = msg.data;
   const chatId = msg.message.chat.id;
+
   if (data === "/again") {
     return startGame(chatId);
   }
